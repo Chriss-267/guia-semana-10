@@ -41,6 +41,83 @@ class TransaccionController extends Controller
             ->with('mensaje', 'Transacción registrada con éxito.');
     }
 
+    /**
+     * Formulario de edición, ya lleno con los datos actuales.
+     * No hay find($id): Route Model Binding busca la transacción
+     * por el {transaccion} de la ruta y da 404 si no existe.
+     */
+    public function edit(Transaccion $transaccion): View
+    {
+        $comercios = Comercio::orderBy('nombre_comercio')->get();
+
+        return view('transacciones.edit', compact('transaccion', 'comercios'));
+    }
+
+    /**
+     * Guarda la edición reutilizando el mismo Form Request de store().
+     * validated() solo trae los campos de rules(), así que "estado"
+     * no se puede colar desde el formulario.
+     */
+    public function update(GuardarTransaccionRequest $request, Transaccion $transaccion): RedirectResponse
+    {
+        $transaccion->update($request->validated());
+
+        return redirect()
+            ->route('comercios.show', $transaccion->comercio_id)
+            ->with('mensaje', 'Transacción actualizada correctamente.');
+    }
+
+    /**
+     * Elimina la transacción. Sus eventos se borran solos por el
+     * cascadeOnDelete() de la migración de eventos_transaccion.
+     *
+     * Reto (Misión B): el comercio y el cliente se guardan antes del
+     * delete() para poder usarlos en el redirect y en el mensaje.
+     */
+    public function destroy(Transaccion $transaccion): RedirectResponse
+    {
+        $comercioId = $transaccion->comercio_id;
+        $cliente = $transaccion->cliente_nombre;
+
+        $transaccion->delete();
+
+        return redirect()
+            ->route('comercios.show', $comercioId)
+            ->with('mensaje', "Transacción de {$cliente} eliminada.");
+    }
+
+    /**
+     * Cambia solo el estado, sin pasar por el formulario de edición.
+     *
+     * Reto: no basta con que el estado exista; la transición desde el
+     * estado actual también tiene que tener sentido. Una Completada ya
+     * se cobró, así que no se mueve a ningún lado.
+     */
+    public function moverEstado(Transaccion $transaccion, string $estado): RedirectResponse
+    {
+        $validos = ['Iniciada', 'Completada', 'Fallida'];
+
+        if (! in_array($estado, $validos)) {
+            abort(400, 'Estado no válido.');
+        }
+
+        $transiciones = [
+            'Iniciada' => ['Completada', 'Fallida'],
+            'Completada' => [],
+            'Fallida' => ['Iniciada'],
+        ];
+
+        if (! in_array($estado, $transiciones[$transaccion->estado] ?? [])) {
+            abort(400, "No se puede mover de {$transaccion->estado} a {$estado}.");
+        }
+
+        $transaccion->update(['estado' => $estado]);
+
+        return redirect()
+            ->route('comercios.show', $transaccion->comercio_id)
+            ->with('mensaje', "Transacción movida a {$estado}.");
+    }
+
     /*
      * Reto: el mismo Form Request en otro método, sin repetir reglas.
      * validated() devuelve solo los campos que pasaron por rules().

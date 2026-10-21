@@ -34,6 +34,25 @@ Route::post('/transacciones',
     [TransaccionController::class, 'store']
 )->name('transacciones.store');
 
+// Semana 11 · Editar y eliminar. Los formularios mandan POST y
+// @method('PUT') / @method('DELETE') dicen el verbo real.
+Route::get('/transacciones/{transaccion}/editar',
+    [TransaccionController::class, 'edit']
+)->name('transacciones.edit');
+
+Route::put('/transacciones/{transaccion}',
+    [TransaccionController::class, 'update']
+)->name('transacciones.update');
+
+Route::delete('/transacciones/{transaccion}',
+    [TransaccionController::class, 'destroy']
+)->name('transacciones.destroy');
+
+// Cambia solo el estado. PATCH porque es una actualización parcial.
+Route::patch('/transacciones/{transaccion}/mover/{estado}',
+    [TransaccionController::class, 'moverEstado']
+)->name('transacciones.mover');
+
 // Rutas de práctica. No tocan la base de datos.
 Route::get('/practica/formulario-demo', function () {
     return view('practica.formulario_demo');

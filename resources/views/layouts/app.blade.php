@@ -98,6 +98,17 @@
             margin: 1rem 0;
         }
         .resumen-errores ul { margin: 0.5rem 0 0; padding-left: 1.2rem; }
+
+        /* Botones de cada transacción (editar, mover estado, eliminar) */
+        .acciones {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+        .acciones form { display: inline; margin: 0; }
+        .acciones button.peligro { color: var(--red); }
     </style>
 </head>
 <body>
