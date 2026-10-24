@@ -6,16 +6,30 @@ use App\Http\Requests\GuardarTransaccionRequest;
 use App\Models\Comercio;
 use App\Models\Transaccion;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class TransaccionController extends Controller
 {
     /**
+     * Semana 12 · Una transacción es del usuario si su comercio lo es.
+     * Si no, 404 (como si no existiera). Se llama al inicio de cada
+     * método que recibe una transacción por la URL.
+     */
+    private function autorizar(Transaccion $t): void
+    {
+        abort_unless($t->comercio->user_id === Auth::id(), 404);
+    }
+
+    /**
      * Muestra el formulario de nueva transacción.
      * {comercio} llega ya convertido en instancia del modelo.
+     * Semana 12: solo en un comercio propio.
      */
     public function create(Comercio $comercio): View
     {
+        abort_unless($comercio->user_id === Auth::id(), 404);
+
         return view('transacciones.create', compact('comercio'));
     }
 
@@ -45,10 +59,13 @@ class TransaccionController extends Controller
      * Formulario de edición, ya lleno con los datos actuales.
      * No hay find($id): Route Model Binding busca la transacción
      * por el {transaccion} de la ruta y da 404 si no existe.
+     * Semana 12: el <select> solo ofrece mis comercios.
      */
     public function edit(Transaccion $transaccion): View
     {
-        $comercios = Comercio::orderBy('nombre_comercio')->get();
+        $this->autorizar($transaccion);
+
+        $comercios = Auth::user()->comercios()->orderBy('nombre_comercio')->get();
 
         return view('transacciones.edit', compact('transaccion', 'comercios'));
     }
@@ -60,6 +77,8 @@ class TransaccionController extends Controller
      */
     public function update(GuardarTransaccionRequest $request, Transaccion $transaccion): RedirectResponse
     {
+        $this->autorizar($transaccion);
+
         $transaccion->update($request->validated());
 
         return redirect()
@@ -76,6 +95,8 @@ class TransaccionController extends Controller
      */
     public function destroy(Transaccion $transaccion): RedirectResponse
     {
+        $this->autorizar($transaccion);
+
         $comercioId = $transaccion->comercio_id;
         $cliente = $transaccion->cliente_nombre;
 
@@ -95,6 +116,8 @@ class TransaccionController extends Controller
      */
     public function moverEstado(Transaccion $transaccion, string $estado): RedirectResponse
     {
+        $this->autorizar($transaccion);
+
         $validos = ['Iniciada', 'Completada', 'Fallida'];
 
         if (! in_array($estado, $validos)) {

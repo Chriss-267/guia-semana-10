@@ -38,6 +38,11 @@
             text-decoration: none;
             font-weight: bold;
         }
+        nav .sesion {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
         nav .tag {
             background: var(--gold);
             color: var(--navy);
@@ -112,9 +117,25 @@
     </style>
 </head>
 <body>
-    <nav>
+    <nav class="barra">
         <a href="{{ route('comercios.index') }}">Pasarela de Pagos · TaskBoard</a>
-        <span class="tag">UPED · Integración de Sistemas</span>
+
+        {{-- Semana 12: la barra cambia según haya o no sesión --}}
+        <div class="sesion">
+            @auth
+                <span>Hola, {{ Auth::user()->name }}</span>
+                {{-- POST, no un enlace GET: una <img src="/logout"> en otra página no te puede sacar --}}
+                <form method="POST" action="{{ route('logout') }}" style="display:inline">
+                    @csrf
+                    <button type="submit">Salir</button>
+                </form>
+            @endauth
+
+            @guest
+                <a href="{{ route('login') }}">Entrar</a>
+                <a href="{{ route('registro') }}">Registrarse</a>
+            @endguest
+        </div>
     </nav>
 
     {{-- Mensaje de éxito. Dura un solo request: con F5 desaparece. --}}

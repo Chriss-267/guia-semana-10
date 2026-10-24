@@ -2,21 +2,26 @@
 
 namespace Database\Seeders;
 
-use App\Models\Comercio;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class ComercioSeeder extends Seeder
 {
     /**
-     * Datos de ejemplo usados en todas las guías de Semana 6-8:
-     * - Café Amanecer: comercio CON transacciones (uno Completada, uno Iniciada).
-     * - Ferretería El Tornillo: comercio SIN transacciones (para probar @empty).
+     * Datos de ejemplo usados en todas las guías de Semana 6-8.
+     *
+     * Semana 12: cada comercio se crea desde su dueño, así user_id se
+     * llena solo. Ana: Café Amanecer (id 1). Carlos: Ferretería El
+     * Tornillo (id 2), con una transacción para la matriz de pruebas.
      */
     public function run(): void
     {
-        $cafeAmanecer = Comercio::create([
+        $ana = User::where('email', 'ana@taskboard.test')->firstOrFail();
+        $carlos = User::where('email', 'carlos@taskboard.test')->firstOrFail();
+
+        $cafeAmanecer = $ana->comercios()->create([
             'nombre_comercio' => 'Café Amanecer',
-            'rubro' => 'Restaurante',
+            'rubro' => 'Cafetería',
             'telefono' => '2222-1234',
         ]);
 
@@ -33,23 +38,16 @@ class ComercioSeeder extends Seeder
             ],
         ]);
 
-        Comercio::create([
+        $ferreteria = $carlos->comercios()->create([
             'nombre_comercio' => 'Ferretería El Tornillo',
             'rubro' => 'Ferretería',
             'telefono' => '2222-5678',
         ]);
 
-        // Comercio adicional para tener más variedad al probar la interfaz.
-        $pupuseria = Comercio::create([
-            'nombre_comercio' => 'Pupusería Doña Marta',
-            'rubro' => 'Restaurante',
-            'telefono' => '2222-9012',
-        ]);
-
-        $pupuseria->transacciones()->create([
-            'monto' => 8.00,
-            'cliente_nombre' => 'Carlos Ramírez',
-            'estado' => 'Fallida',
+        $ferreteria->transacciones()->create([
+            'monto' => 30.00,
+            'cliente_nombre' => 'Rosa Hernández',
+            'estado' => 'Iniciada',
         ]);
     }
 }
